@@ -69,6 +69,8 @@ func (w *Worker) GetId() int64 {
 		w.timestamp = now // 将机器上一次生成ID的时间更新为当前时间
 	}
 
+	// 第一段 now - epoch 为该算法目前已经奔跑了xxx毫秒
+	// 如果在程序跑了一段时间修改了epoch这个值 可能会导致生成相同的ID
 	ID := int64((now - epoch) << timeShift | (w.workerId << workerShift) | (w.number))
 	return ID
 }
