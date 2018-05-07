@@ -11,6 +11,7 @@ import (
 const (
 	workerBits uint8 = 10 // 每台机器(节点)的ID位数 10位最大可以有2^10=1024个节点
 	numberBits uint8 = 12 // 表示每个集群下的每个节点，1毫秒内可生成的id序号的二进制位数 即每毫秒可生成 2^12-1=4096个唯一ID
+	// 这里求最大值使用了位运算，-1 的二进制表示为 1 的补码，感兴趣的同学可以自己算算试试 -1 ^ (-1 << nodeBits) 这里是不是等于 1023
 	workerMax int64 = -1 ^ (-1 << workerBits) // 节点ID的最大值，用于防止溢出
 	numberMax int64 = -1 ^ (-1 << numberBits) // 同上，用来表示生成id序号的最大值
 	timeShift uint8 = workerBits + numberBits // 时间戳向左的偏移量
@@ -25,7 +26,7 @@ const (
 type Worker struct {
 	mu sync.Mutex // 添加互斥锁 确保并发安全
 	timestamp int64 // 记录时间戳
-	workerId int64 // 节点ID部分
+	workerId int64 // 该节点的ID
 	number int64 // 当前毫秒已经生成的id序列号(从0开始累加) 1毫秒内最多生成4096个ID
 }
 
@@ -65,9 +66,8 @@ func (w *Worker) GetId() int64 {
 	} else {
 		// 如果当前时间与工作节点上一次生成ID的时间不一致 则需要重置工作节点生成ID的序号
 		w.number = 0
+		w.timestamp = now // 将机器上一次生成ID的时间更新为当前时间
 	}
-
-	w.timestamp = now // 将机器上一次生成ID的时间更新为当前时间
 
 	ID := int64((now - epoch) << timeShift | (w.workerId << workerShift) | (w.number))
 	return ID
