@@ -72,7 +72,3 @@ func (w *Worker) GetId() int64 {
 	ID := int64((now - epoch) << timeShift | (w.workerId << workerShift) | (w.number))
 	return ID
 }
-
-func main(){
-
-}
