@@ -17,7 +17,7 @@ func TestSnowFlakeByGo(t *testing.T) {
 	}
 
 	ch := make(chan int64)
-	count := 1000000
+	count := 10000
 	// 并发 count 个 goroutine 进行 snowflake ID 生成
 	for i := 0; i < count; i++ {
 		go func() {
