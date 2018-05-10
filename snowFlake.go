@@ -1,8 +1,8 @@
 package snowFlakeByGo
 
 import (
-	"sync"
 	"errors"
+	"sync"
 	"time"
 )
 
@@ -12,10 +12,10 @@ const (
 	workerBits uint8 = 10 // 每台机器(节点)的ID位数 10位最大可以有2^10=1024个节点
 	numberBits uint8 = 12 // 表示每个集群下的每个节点，1毫秒内可生成的id序号的二进制位数 即每毫秒可生成 2^12-1=4096个唯一ID
 	// 这里求最大值使用了位运算，-1 的二进制表示为 1 的补码，感兴趣的同学可以自己算算试试 -1 ^ (-1 << nodeBits) 这里是不是等于 1023
-	workerMax int64 = -1 ^ (-1 << workerBits) // 节点ID的最大值，用于防止溢出
-	numberMax int64 = -1 ^ (-1 << numberBits) // 同上，用来表示生成id序号的最大值
-	timeShift uint8 = workerBits + numberBits // 时间戳向左的偏移量
-	workerShift uint8 = numberBits // 节点ID向左的偏移量
+	workerMax   int64 = -1 ^ (-1 << workerBits) // 节点ID的最大值，用于防止溢出
+	numberMax   int64 = -1 ^ (-1 << numberBits) // 同上，用来表示生成id序号的最大值
+	timeShift   uint8 = workerBits + numberBits // 时间戳向左的偏移量
+	workerShift uint8 = numberBits              // 节点ID向左的偏移量
 	// 41位字节作为时间戳数值的话 大约68年就会用完
 	// 假如你2010年1月1日开始开发系统 如果不减去2010年1月1日的时间戳 那么白白浪费40年的时间戳啊！
 	// 这个一旦定义且开始生成ID后千万不要改了 不然可能会生成相同的ID
@@ -24,10 +24,10 @@ const (
 
 // 定义一个woker工作节点所需要的基本参数
 type Worker struct {
-	mu sync.Mutex // 添加互斥锁 确保并发安全
-	timestamp int64 // 记录时间戳
-	workerId int64 // 该节点的ID
-	number int64 // 当前毫秒已经生成的id序列号(从0开始累加) 1毫秒内最多生成4096个ID
+	mu        sync.Mutex // 添加互斥锁 确保并发安全
+	timestamp int64      // 记录时间戳
+	workerId  int64      // 该节点的ID
+	number    int64      // 当前毫秒已经生成的id序列号(从0开始累加) 1毫秒内最多生成4096个ID
 }
 
 // 实例化一个工作节点
@@ -39,8 +39,8 @@ func NewWorker(workerId int64) (*Worker, error) {
 	// 生成一个新节点
 	return &Worker{
 		timestamp: 0,
-		workerId: workerId,
-		number: 0,
+		workerId:  workerId,
+		number:    0,
 	}, nil
 }
 
@@ -71,6 +71,6 @@ func (w *Worker) GetId() int64 {
 
 	// 第一段 now - epoch 为该算法目前已经奔跑了xxx毫秒
 	// 如果在程序跑了一段时间修改了epoch这个值 可能会导致生成相同的ID
-	ID := int64((now - epoch) << timeShift | (w.workerId << workerShift) | (w.number))
+	ID := int64((now-epoch)<<timeShift | (w.workerId << workerShift) | (w.number))
 	return ID
 }
