@@ -62,6 +62,7 @@ func (w *Worker) GetId() int64 {
 			for now <= w.timestamp {
 				now = time.Now().UnixNano() / 1e6
 			}
+			w.number = 0 // 这里是不是应该重置为0 ？？
 		}
 	} else {
 		// 如果当前时间与工作节点上一次生成ID的时间不一致 则需要重置工作节点生成ID的序号
