@@ -1,8 +1,8 @@
 package snowFlakeByGo
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 func TestSnowFlakeByGo(t *testing.T) {
@@ -18,19 +18,24 @@ func TestSnowFlakeByGo(t *testing.T) {
 
 	ch := make(chan int64)
 	count := 10000
+	open := make(chan struct{}, 1)
 	// 并发 count 个 goroutine 进行 snowflake ID 生成
 	for i := 0; i < count; i++ {
-		go func() {
+		go func(i int) {
+			if i == count-1 {
+				close(open)
+			}
+			<-open
 			id := worker.GetId()
 			ch <- id
-		}()
+		}(i)
 	}
 
 	defer close(ch)
 
 	m := make(map[int64]int)
-	for i := 0; i < count; i++  {
-		id := <- ch
+	for i := 0; i < count; i++ {
+		id := <-ch
 		// 如果 map 中存在为 id 的 key, 说明生成的 snowflake ID 有重复
 		_, ok := m[id]
 		if ok {

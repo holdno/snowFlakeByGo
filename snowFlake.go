@@ -52,8 +52,9 @@ func (w *Worker) GetId() int64 {
 	defer w.mu.Unlock() // 生成完成后记得 解锁 解锁 解锁
 
 	// 获取生成时的时间戳
+	var reset bool
 	now := time.Now().UnixNano() / 1e6 // 纳秒转毫秒
-	if w.timestamp == now {
+	if reset = !(w.timestamp == now); !reset {
 		w.number++
 
 		// 这里要判断，当前工作节点是否在1毫秒内已经生成numberMax个ID
@@ -62,8 +63,11 @@ func (w *Worker) GetId() int64 {
 			for now <= w.timestamp {
 				now = time.Now().UnixNano() / 1e6
 			}
+			reset = true
 		}
-	} else {
+	}
+
+	if reset {
 		// 如果当前时间与工作节点上一次生成ID的时间不一致 则需要重置工作节点生成ID的序号
 		w.number = 0
 		w.timestamp = now // 将机器上一次生成ID的时间更新为当前时间
